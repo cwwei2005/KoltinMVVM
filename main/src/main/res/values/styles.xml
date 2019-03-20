@@ -1,0 +1,20 @@
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+
+    <!--启动activity时不显示白屏或黑屏，而显示背景-->
+    <style name="AppTheme.Launcher">
+        <item name="android:windowBackground">@drawable/img_bg2</item>
+        <!--<item name="android:fromAlpha">0</item>-->
+        <!--<item name="android:toAlpha">1</item>-->
+        <item name="android:inAnimation">@anim/alpha</item>
+        <!--<item name="android:animationDuration">2000</item>-->
+    </style>
+
+</resources>

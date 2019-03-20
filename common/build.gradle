@@ -1,0 +1,90 @@
+apply plugin: 'com.android.library'
+
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
+
+android {
+    compileSdkVersion 28
+    defaultConfig {
+        minSdkVersion 19
+        targetSdkVersion 28
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
+//        useLibrary 'org.apache.http.legacy'
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    dataBinding {
+        enabled = true
+    }
+}
+
+kapt {
+    arguments { arg("moduleName", project.getName()) }
+}
+
+dependencies {
+    api fileTree(dir: 'libs', include: ['*.jar'])
+    api deps.support.app_compat
+    api deps.kotlin.stdlib
+    api deps.anko.common
+    api deps.support.core_ktx
+    api deps.constraint_layout
+    testApi deps.junit
+    androidTestApi deps.atsl.runner
+    androidTestApi deps.espresso.core
+
+    // Architecture components
+//    api deps.lifecycle.runtime
+//    api deps.lifecycle.extensions
+//    kapt deps.lifecycle.compiler  //annotationProcessor
+//    api deps.room.runtime
+//    kapt deps.room.compiler   //annotationProcessor
+
+    //第三方lib
+    api deps.arouter.api
+    kapt deps.arouter.compiler
+    api deps.support.recyclerview
+    api deps.support.design
+    api deps.glide.runtime
+    kapt deps.glide.compiler
+    //rx android
+    api deps.rx_android
+    api deps.rxjava2
+    //retrofit
+    api deps.retrofit.runtime
+    api deps.retrofit.gson
+//    api deps.retrofit.mock
+    api 'com.squareup.retrofit2:adapter-rxjava2:2.3.0'
+    //gson
+    api deps.gson.gson
+    //recyclerview
+    api deps.support.recyclerview
+
+    // Architecture components(google)
+    api deps.lifecycle.runtime
+    api deps.lifecycle.extensions
+    api deps.room.runtime
+    //非公共部分依赖需在每个组件添加
+//    kapt deps.lifecycle.compiler
+//    kapt deps.room.compiler
+    //facebook出品，可在Chrome中查看数据库
+    api 'com.facebook.stetho:stetho:1.5.0'
+
+    //bomb
+//    implementation 'cn.bmob.android:bmob-sdk:3.7.0'
+//    implementation "io.reactivex.rxjava2:rxjava:2.2.2"
+//    implementation 'io.reactivex.rxjava2:rxandroid:2.1.0'
+//    implementation 'com.squareup.okio:okio:2.1.0'
+//    implementation 'com.google.code.gson:gson:2.8.5'
+//    implementation 'com.squareup.okhttp3:okhttp:3.12.0'
+}

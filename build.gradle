@@ -1,0 +1,28 @@
+ext.isAlone = true  //false：每个module作为组件，true：作为独立app
+
+buildscript {
+    apply from: 'versions.gradle'
+    addRepos(repositories)
+    dependencies {
+        classpath deps.android_gradle_plugin
+        classpath deps.kotlin.plugin
+    }
+    repositories {
+        google()
+        mavenCentral()
+        //Bmob的maven仓库地址--必填
+//        maven { url "https://raw.github.com/bmob/bmob-android-sdk/master" }
+        maven {
+            url 'https://jitpack.io'
+            url 'https://maven.google.com'
+        }
+    }
+}
+
+allprojects {
+    addRepos(repositories)
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}

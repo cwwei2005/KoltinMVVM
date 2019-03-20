@@ -1,0 +1,78 @@
+if (rootProject.ext.isAlone) {
+    apply plugin: 'com.android.application'
+} else {
+    apply plugin: 'com.android.library'
+}
+
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-kapt'
+
+android {
+    compileSdkVersion 28
+    defaultConfig {
+        if (rootProject.ext.isAlone) {
+            applicationId "com.example.main"
+        }
+        minSdkVersion 19
+        targetSdkVersion 28
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    dataBinding {
+        enabled = true
+    }
+
+    sourceSets {
+        main {
+            if (rootProject.ext.isAlone) {
+                manifest.srcFile 'src/main/module/AndroidManifest.xml'
+//                java.srcDirs = ['src/main/java', 'src/main/module/java']
+//                res.srcDirs = ['src/main/res', 'src/main/module/res']
+                sourceSets { main.java.srcDirs += 'src/main/module/java'}
+            } else {
+                //作为组件
+                manifest.srcFile 'src/main/AndroidManifest.xml'
+                //集成开发模式下排除debug文件夹中的所有Java文件
+                java {
+                    exclude 'com.example.main.debug/**'
+                }
+            }
+        }
+    }
+}
+
+kapt {
+    arguments { arg("moduleName", project.getName()) }
+}
+
+dependencies {
+    api project(':common')
+
+    kapt deps.arouter.compiler   //kapt for kotlin
+    kapt 'com.android.databinding:compiler:3.1.4'
+    implementation 'androidx.viewpager:viewpager:1.0.0'
+    implementation 'me.relex:circleindicator:2.1.0'
+    kapt deps.glide.compiler
+
+    // Architecture components
+//    api deps.lifecycle.runtime
+//    api deps.lifecycle.extensions
+//    api deps.room.runtime
+    kapt deps.lifecycle.compiler
+    kapt deps.room.compiler
+    // roomigrant
+//    implementation 'com.github.MatrixDev.Roomigrant:RoomigrantLib:0.1.1'
+//    kapt 'com.github.MatrixDev.Roomigrant:RoomigrantCompiler:0.1.1'
+}
