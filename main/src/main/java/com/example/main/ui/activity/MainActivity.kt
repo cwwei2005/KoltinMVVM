@@ -9,6 +9,7 @@ import com.example.common.BaseActivity
 import com.example.common.utils.LogUtils
 import com.example.main.R
 import com.example.main.databinding.ActivityMainBinding
+import com.example.main.debug.MainApplication
 import com.example.main.model.entity.ArticleEntity
 import com.example.main.model.remote.NetworkState
 import com.example.main.vm.HomeViewModel
@@ -24,8 +25,8 @@ class MainActivity : BaseActivity(null) {
         val binding = DataBindingUtil.setContentView<ViewDataBinding>(this, R.layout.activity_main) as ActivityMainBinding
         binding.viewModel = vm
         //定义返回类型为LiveData<>，所以当Data变化时会调用Observer
-        vm.getData(this, ArticleEntity::class.java)?.observe(this, Observer { list -> subscribeToModel(list)})
-        vm.getNetworkState(this)?.observe(this, Observer { stat -> subscribeToNetworkState(stat)})
+        vm.getData(MainApplication.mainApp, ArticleEntity::class.java)?.observe(this, Observer { list -> subscribeToModel(list)})
+        vm.getNetworkState(MainApplication.mainApp)?.observe(this, Observer { stat -> subscribeToNetworkState(stat)})
         initBanner()
     }
 

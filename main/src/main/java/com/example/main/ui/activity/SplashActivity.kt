@@ -38,7 +38,7 @@ class SplashActivity : BaseActivity(R.layout.activity_splash) {
         if (!startFirst){
             startFirst = true
             //init
-            SystemClock.sleep(3000)
+            SystemClock.sleep(1000)
             LogUtils.e("tag","startFirst")
         } else {
             SystemClock.sleep(300)

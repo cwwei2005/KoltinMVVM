@@ -13,8 +13,17 @@ import com.example.main.model.entity.ArticleEntity
 import com.example.main.model.local.MyDataBase
 import com.example.main.model.remote.MyRetrofit
 import com.example.main.model.remote.NetworkState
+import io.reactivex.Observable
+import io.reactivex.ObservableEmitter
+import io.reactivex.ObservableOnSubscribe
 import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
+import org.androidannotations.annotations.Background
+import org.androidannotations.annotations.SupposeUiThread
+import org.reactivestreams.Subscriber
+import io.reactivex.android.schedulers.AndroidSchedulers
+
+
 
 
 class MyRepository{
@@ -41,18 +50,35 @@ class MyRepository{
                 data.postValue(list)  //异步通知更新
             } else {
                 LogUtils.e("tag","get remote data...")
-                getRemoteData(ctx, tClass){ ->
-                    if (ctx is Activity){
-                        val activity:Activity = ctx
-                        activity.runOnUiThread {
-                            data.addSource(getLocalData(ctx, tClass)){ list -> data.postValue(list) }
-                        }
+                getRemoteData(ctx, tClass){ t ->
+                    when(tClass.newInstance()){  //io线程
+                        is ArticleEntity -> MyDataBase.getInstance(ctx).articleDao().insertAll(listOf(t) as List<ArticleEntity>)
                     }
+                    update(data, ctx, tClass)
                 }
             }
         }
         return data
     }
+
+    //通知数据更新
+    fun update(data:  MediatorLiveData<List<Any>>, ctx: Context, tClass:Class<out Any>){
+        val obs = Observable.create(ObservableOnSubscribe<Any> { e -> e.onNext("哈哈") })  //创建被观察者并发送一个事件
+        //订阅事件
+        obs.subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe { t ->
+                LogUtils.e("tag","$t")
+                val localData = getLocalData(ctx, tClass)
+                data.addSource(localData){ list ->
+//                    data.postValue(list)
+                    if (/*MyDataBase.mIsDatabaseCreated.value != null*/localData.value?.size!! > 0){
+                        data.postValue(list)  //异步通知更新
+                    }
+                }
+            }
+    }
+
 
 
     private val networkState = MutableLiveData<NetworkState>()
@@ -71,7 +97,7 @@ class MyRepository{
     }
 
     //获取网络数据
-    private fun getRemoteData(ctx :Context, tClass:Class<out Any>, update:()->Unit) {
+    private fun getRemoteData(ctx :Context, tClass:Class<out Any>, update:(t: Any?)->Unit) {
         val single:Single<out Any>? = when(tClass.newInstance()){
             is ArticleEntity -> MyRetrofit.getInstance(ctx).remoteApi.getArticles()
             else -> null
@@ -79,72 +105,16 @@ class MyRepository{
         single?.subscribeOn(Schedulers.io())!!  //io线程
         .subscribe({ t: Any? ->
             //获取成功，写入数据库
-            when(tClass.newInstance()){  //io线程
-                is ArticleEntity -> MyDataBase.getInstance(ctx).articleDao().insertAll(listOf(t) as List<ArticleEntity>)
-            }
+//            when(tClass.newInstance()){  //io线程
+//                is ArticleEntity -> MyDataBase.getInstance(ctx).articleDao().insertAll(listOf(t) as List<ArticleEntity>)
+//            }
             LogUtils.e("tag","write done")
-            update()
+            update(t)
             networkState.postValue(NetworkState.LOADED)
-//            update(ctx, tClass)
         }, { t: Throwable? ->
             LogUtils.e("tag","${t?.message.toString()}")
-//            update()
             networkState.postValue(NetworkState.error(t?.message.toString()))
         })
     }
-
-
-//    fun getArticle(ctx :Context): LiveData<List<ArticleEntity>>?{
-//        return getData(ctx, ArticleEntity::class.java)
-//    }
-
-
-
-//    fun getUser(ctx :Context): LiveData<List<UserEntity>>?{
-//        val data = MediatorLiveData<List<UserEntity>>()
-//        val dbData = MyDataBase.getInstance(ctx).userDao().loadAllData()
-//        data.addSource(dbData) { list ->
-//            if (/*MyDataBase.mIsDatabaseCreated.value != null*/dbData.value?.size!! > 0){
-//                data.postValue(list)  //调用postValue才会通知更新
-//            } else {
-//                LogUtils.e("tag","remote...")
-//                MyRetrofit.getInstance(ctx).remoteApi.getArticles()
-//                    .subscribeOn(Schedulers.io())  //io线程
-////                .observeOn(AndroidSchedulers.mainThread())
-//                    .subscribe({ t: ArticleEntity? ->
-//                        val user = UserEntity()
-//                        user.name = "cww"
-//                        user.password = "123456"
-//                        MyDataBase.getInstance(ctx).userDao().save(user)  //线程
-//                    }, { t: Throwable? ->
-//                        LogUtils.e("tag","${t?.message.toString()}")
-//                    })
-//            }
-//        }
-//        return data
-//    }
-
-
-//    enum class Status {
-//        LOADING,
-//        SUCCESS,
-//        FAILED
-//    }
-//
-//    data class NetworkState private constructor(val status: Status, val msg: String? = null) {
-//        companion object {
-//            val LOADED = NetworkState(Status.SUCCESS)
-//            val LOADING = NetworkState(Status.LOADING)
-//            fun error(msg: String?) = NetworkState(Status.FAILED, msg)
-//        }
-//    }
-//
-//    data class Listing<T>(
-//        val pageList: LiveData<out List<T>>,
-//        val networkState: LiveData<NetworkState>,
-//        val refreshState: LiveData<NetworkState>,
-//        val refresh: () -> Unit,
-//        val retry: () -> Unit
-//    )
 
 }
