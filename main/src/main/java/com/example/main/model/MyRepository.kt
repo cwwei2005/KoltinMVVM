@@ -2,23 +2,20 @@ package com.example.main.model
 
 import android.app.Activity
 import android.content.Context
+import androidx.annotation.MainThread
+import androidx.annotation.UiThread
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import com.example.common.utils.LogUtils
-import com.example.main.debug.MainApplication
-import com.example.main.model.data.Article
-import com.example.main.model.data.User
-import com.example.main.model.remote.RemoteService
-import io.reactivex.android.schedulers.AndroidSchedulers
+import com.example.main.model.entity.ArticleEntity
+import com.example.main.model.local.MyDataBase
+import com.example.main.model.remote.MyRetrofit
+import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
-import retrofit2.Retrofit
-import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
-import retrofit2.converter.gson.GsonConverterFactory
 
 
 class MyRepository{
-
-    private var mObservableProducts: MediatorLiveData<List<User>>? = null
 
     companion object {
         private var instance:MyRepository? = null
@@ -34,79 +31,109 @@ class MyRepository{
         }
     }
 
-    init {
-        mObservableProducts = MediatorLiveData<List<User>>()
-        mObservableProducts?.addSource(
-            MyDataBase.getInstance(MainApplication.mainApp).userDao().loadAllData()
-        ) { productEntities ->
-            if (MyDataBase.getInstance(MainApplication.mainApp).userDao().loadAllData() != null) {
-                mObservableProducts?.postValue(productEntities)
+    fun getData(ctx :Context, tClass:Class<out Any>):LiveData<out List<Any>>?{
+        val localData = getLocalData(ctx, tClass)
+        val data = MediatorLiveData<List<Any>>()
+        data.addSource(localData) {list ->
+            if (/*MyDataBase.mIsDatabaseCreated.value != null*/localData.value?.size!! > 0){
+                data.postValue(list)  //异步通知更新
+            } else {
+                LogUtils.e("tag","get remote data...")
+                getRemoteData(ctx, tClass){networkStat, msg ->
+                    if (ctx is Activity){
+                        val activity:Activity = ctx
+                        activity.runOnUiThread {
+                            data.addSource(getLocalData(ctx, tClass)){ list -> data.postValue(list) }
+                        }
+                    }
+                }
             }
         }
+        return data
     }
 
-
-    fun getArticle(ctx :Context): LiveData<Article>?{
-        //todo 获取本地数据，没有则获取网络数据
-        val list = MyDataBase.getInstance(ctx).articleDao().loadAllData().value
-        val article = MyDataBase.getInstance(ctx).articleDao().loadData(0)
-        LogUtils.e("tag","check db ${MyDataBase.checkDB(ctx)}")
-        if (article.value == null){
-            LogUtils.e("tag","get remote")
-            val retrofit = Retrofit.Builder()
-                .baseUrl("http://api.jcodecraeer.com/")
-                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-                .addConverterFactory(GsonConverterFactory.create())
-                .build().create(RemoteService::class.java)
-            retrofit.getArticleDetail(/*8773*/)
-                .subscribeOn(Schedulers.io())
-//                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({ t: Article? ->
-                    LogUtils.e("tag","Article:${t?.total_count}")
-                    MyDataBase.getInstance(ctx).articleDao().save(t!!)
-//                    article.value = t
-                }, { t: Throwable? ->
-                    LogUtils.e("tag","${t?.message.toString()}")
-                })
-        } else{
-            LogUtils.e("tag","get local")
+    //获取数据库数据
+    private fun getLocalData(ctx :Context, tClass:Class<out Any>) :LiveData<out List<Any>>{
+        val dbData = when(tClass.newInstance()){
+            is ArticleEntity -> (MyDataBase.getInstance(ctx).articleDao().loadAllData())
+            else -> null
         }
-        return article
+        return dbData!!
+    }
+
+    //获取网络数据
+    private fun getRemoteData(ctx :Context, tClass:Class<out Any>, update:(networkStat:Status, msg:String)->Unit) {
+        val single:Single<out Any>? = when(tClass.newInstance()){
+            is ArticleEntity -> MyRetrofit.getInstance(ctx).remoteApi.getArticles()
+            else -> null
+        }
+        single?.subscribeOn(Schedulers.io())!!  //io线程
+        .subscribe({ t: Any? ->
+            //获取成功，写入数据库
+            when(tClass.newInstance()){  //io线程
+                is ArticleEntity -> MyDataBase.getInstance(ctx).articleDao().insertAll(listOf(t) as List<ArticleEntity>)
+            }
+            LogUtils.e("tag","write done")
+            update(Status.SUCCESS, "")
+//            update(ctx, tClass)
+        }, { t: Throwable? ->
+            LogUtils.e("tag","${t?.message.toString()}")
+            update(Status.FAILED, t?.message.toString())
+        })
     }
 
 
+//    fun getArticle(ctx :Context): LiveData<List<ArticleEntity>>?{
+//        return getData(ctx, ArticleEntity::class.java)
+//    }
 
-    fun getUser(ctx :Context): LiveData<List<User>>?{
-        return mObservableProducts
-//        val data = MyDataBase.getInstance(ctx).userDao().loadAllData()
-//        val list = MyDataBase.getInstance(ctx).userDao().loadAllData().value
-//        val user = MyDataBase.getInstance(ctx).userDao().loadData(0)
-//        LogUtils.e("tag","check db ${MyDataBase.checkDB(ctx)}")
-//        if (user.value == null){
-//            LogUtils.e("tag","getUser remote")
-//            val retrofit = Retrofit.Builder()
-//                .baseUrl("http://api.jcodecraeer.com/")
-//                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-//                .addConverterFactory(GsonConverterFactory.create())
-//                .build().create(RemoteService::class.java)
-//            retrofit.getArticleDetail(/*8773*/)
-//                .subscribeOn(Schedulers.io())
+
+
+//    fun getUser(ctx :Context): LiveData<List<UserEntity>>?{
+//        val data = MediatorLiveData<List<UserEntity>>()
+//        val dbData = MyDataBase.getInstance(ctx).userDao().loadAllData()
+//        data.addSource(dbData) { list ->
+//            if (/*MyDataBase.mIsDatabaseCreated.value != null*/dbData.value?.size!! > 0){
+//                data.postValue(list)  //调用postValue才会通知更新
+//            } else {
+//                LogUtils.e("tag","remote...")
+//                MyRetrofit.getInstance(ctx).remoteApi.getArticles()
+//                    .subscribeOn(Schedulers.io())  //io线程
 ////                .observeOn(AndroidSchedulers.mainThread())
-//                .subscribe({ t: Article? ->
-//                    LogUtils.e("tag","Article:${t?.total_count}")
-//                    val user = User()
-////                    user.id = 1
-//                    user.name = "cww"
-//                    user.password = "123456"
-//                    MyDataBase.getInstance(ctx).userDao().save(user)
-////                    article.value = t
-//                }, { t: Throwable? ->
-//                    LogUtils.e("tag","${t?.message.toString()}")
-//                })
-//        } else{
-//            LogUtils.e("tag","getUser local")
+//                    .subscribe({ t: ArticleEntity? ->
+//                        val user = UserEntity()
+//                        user.name = "cww"
+//                        user.password = "123456"
+//                        MyDataBase.getInstance(ctx).userDao().save(user)  //线程
+//                    }, { t: Throwable? ->
+//                        LogUtils.e("tag","${t?.message.toString()}")
+//                    })
+//            }
 //        }
 //        return data
+//    }
+
+
+    enum class Status {
+        LOADING,
+        SUCCESS,
+        FAILED
     }
+
+    data class NetworkState private constructor(val status: Status, val msg: String? = null) {
+        companion object {
+            val LOADED = NetworkState(Status.SUCCESS)
+            val LOADING = NetworkState(Status.LOADING)
+            fun error(msg: String?) = NetworkState(Status.FAILED, msg)
+        }
+    }
+
+    data class Listing<T>(
+        val pageList: LiveData<out List<T>>,
+        val networkState: LiveData<NetworkState>,
+        val refreshState: LiveData<NetworkState>,
+        val refresh: () -> Unit,
+        val retry: () -> Unit
+    )
 
 }

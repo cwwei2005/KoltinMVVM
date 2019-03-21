@@ -1,38 +1,39 @@
-package com.example.main.model
+package com.example.main.model.local
 
 import android.content.Context
+import androidx.lifecycle.MutableLiveData
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
-import com.example.main.model.MyDataBase.Companion.DB_VERSION
-import com.example.main.model.data.Article
-import com.example.main.model.data.User
-import com.example.main.model.local.ArticleDao
-import com.example.main.model.local.UserDao
+import com.example.main.model.local.MyDataBase.Companion.DB_VERSION
+import com.example.main.model.entity.ArticleEntity
 
 /**
- * 数据库创建和表
+ * 数据库创建和表(need entity, dao)
  */
-@Database(entities = [Article::class, User::class], version = DB_VERSION)
-//@TypeConverters(DateConverter::class)
+@Database(entities = [ArticleEntity::class/*, UserEntity::class*/], version = DB_VERSION)
 abstract class MyDataBase : RoomDatabase(){
     companion object {
         private const val DB_NAME = "app.db"
         const val DB_VERSION = 1
         const val OLD_VERSION = 1
-        @Volatile private var instance:MyDataBase? = null
+        @Volatile private var instance: MyDataBase? = null
+        val mIsDatabaseCreated = MutableLiveData<Boolean>()
 //        fun instance() = instance!!
 
-        fun getInstance(ctx:Context):MyDataBase = instance?:synchronized(this){ instance?:buildDatabase(ctx) }
-
-        fun checkDB(ctx:Context):String{
-            return if (ctx.getDatabasePath(DB_NAME).exists()) "exists" else "no exists"
+        fun getInstance(ctx:Context): MyDataBase = instance
+            ?:synchronized(this){
+            mIsDatabaseCreated.postValue(ctx.getDatabasePath(DB_NAME).exists())//checkDB(ctx)
+            instance
+                ?: buildDatabase(ctx)
         }
 
-        private fun buildDatabase(ctx:Context): MyDataBase{
-            return Room.databaseBuilder(ctx, MyDataBase::class.java, DB_NAME)
+        private fun buildDatabase(ctx:Context): MyDataBase {
+            return Room.databaseBuilder(ctx, MyDataBase::class.java,
+                DB_NAME
+            )
                 .addMigrations(MIGRATION_1_2)
                 .build()
         }
@@ -56,5 +57,4 @@ abstract class MyDataBase : RoomDatabase(){
 
     //注意，这里使用fun homeDao()，不是var homeDao()
     abstract fun articleDao(): ArticleDao
-    abstract fun userDao(): UserDao
 }

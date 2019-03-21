@@ -80,6 +80,10 @@ dependencies {
     //facebook出品，可在Chrome中查看数据库
     api 'com.facebook.stetho:stetho:1.5.0'
 
+    //koin(AndroidX)
+    api 'org.koin:koin-androidx-scope:1.0.1'
+    api 'org.koin:koin-androidx-viewmodel:1.0.1'
+
     //bomb
 //    implementation 'cn.bmob.android:bmob-sdk:3.7.0'
 //    implementation "io.reactivex.rxjava2:rxjava:2.2.2"

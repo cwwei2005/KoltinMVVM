@@ -5,26 +5,26 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.example.main.model.data.Article
+import com.example.main.model.entity.ArticleEntity
 
 @Dao
 interface ArticleDao{
-    @Query("SELECT * FROM Article")
-    abstract fun loadAllData(): LiveData<List<Article>>
+    @Query("SELECT * FROM ArticleEntity")
+    abstract fun loadAllData(): LiveData<List<ArticleEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    abstract fun insertAll(list: List<Article>)
+    abstract fun insertAll(list: List<ArticleEntity>)
 
-    @Query("select * from Article where id = :id")
-    abstract fun loadData(id: Int): LiveData<Article>
+    @Query("select * from ArticleEntity where id = :id")
+    abstract fun loadData(id: Int): LiveData<ArticleEntity>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun save(article: Article)
+    fun save(articleEntity: ArticleEntity)
 
-    @Query("select * from Article where id = :id")
-    abstract fun loadDataSync(id: Int): Article
+    @Query("select * from ArticleEntity where id = :id")
+    abstract fun loadDataSync(id: Int): ArticleEntity
 
     //注意：Query()的参数使用SQL语句报错，参考https://www.jianshu.com/p/61e7a92d3ba1
-    @Query("select * from Article where id like '%' || :query || '%'")
-    abstract fun searchAllData(query: String?): LiveData<List<Article>>
+    @Query("select * from ArticleEntity where id like '%' || :query || '%'")
+    abstract fun searchAllData(query: String?): LiveData<List<ArticleEntity>>
 }

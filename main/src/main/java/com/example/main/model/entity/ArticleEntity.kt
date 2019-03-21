@@ -1,12 +1,12 @@
-package com.example.main.model.data
+package com.example.main.model.entity
 
 import androidx.room.*
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 
-@Entity(tableName = "Article")
-@TypeConverters(Article.ItemsBeanConverters::class)
-class Article {
+@Entity(tableName = "ArticleEntity")
+@TypeConverters(ArticleEntity.ItemsBeanConverters::class)
+class ArticleEntity {
 
     /**
      * incomplete_results : false
