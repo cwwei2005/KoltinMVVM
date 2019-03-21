@@ -7,10 +7,12 @@ import androidx.annotation.UiThread
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
+import androidx.lifecycle.MutableLiveData
 import com.example.common.utils.LogUtils
 import com.example.main.model.entity.ArticleEntity
 import com.example.main.model.local.MyDataBase
 import com.example.main.model.remote.MyRetrofit
+import com.example.main.model.remote.NetworkState
 import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
 
@@ -39,7 +41,7 @@ class MyRepository{
                 data.postValue(list)  //异步通知更新
             } else {
                 LogUtils.e("tag","get remote data...")
-                getRemoteData(ctx, tClass){networkStat, msg ->
+                getRemoteData(ctx, tClass){ ->
                     if (ctx is Activity){
                         val activity:Activity = ctx
                         activity.runOnUiThread {
@@ -52,6 +54,13 @@ class MyRepository{
         return data
     }
 
+
+    private val networkState = MutableLiveData<NetworkState>()
+    fun getNetworkState(ctx :Context):LiveData<NetworkState>?{
+        networkState.value = NetworkState.IDEL
+        return networkState
+    }
+
     //获取数据库数据
     private fun getLocalData(ctx :Context, tClass:Class<out Any>) :LiveData<out List<Any>>{
         val dbData = when(tClass.newInstance()){
@@ -62,7 +71,7 @@ class MyRepository{
     }
 
     //获取网络数据
-    private fun getRemoteData(ctx :Context, tClass:Class<out Any>, update:(networkStat:Status, msg:String)->Unit) {
+    private fun getRemoteData(ctx :Context, tClass:Class<out Any>, update:()->Unit) {
         val single:Single<out Any>? = when(tClass.newInstance()){
             is ArticleEntity -> MyRetrofit.getInstance(ctx).remoteApi.getArticles()
             else -> null
@@ -74,11 +83,13 @@ class MyRepository{
                 is ArticleEntity -> MyDataBase.getInstance(ctx).articleDao().insertAll(listOf(t) as List<ArticleEntity>)
             }
             LogUtils.e("tag","write done")
-            update(Status.SUCCESS, "")
+            update()
+            networkState.postValue(NetworkState.LOADED)
 //            update(ctx, tClass)
         }, { t: Throwable? ->
             LogUtils.e("tag","${t?.message.toString()}")
-            update(Status.FAILED, t?.message.toString())
+//            update()
+            networkState.postValue(NetworkState.error(t?.message.toString()))
         })
     }
 
@@ -114,26 +125,26 @@ class MyRepository{
 //    }
 
 
-    enum class Status {
-        LOADING,
-        SUCCESS,
-        FAILED
-    }
-
-    data class NetworkState private constructor(val status: Status, val msg: String? = null) {
-        companion object {
-            val LOADED = NetworkState(Status.SUCCESS)
-            val LOADING = NetworkState(Status.LOADING)
-            fun error(msg: String?) = NetworkState(Status.FAILED, msg)
-        }
-    }
-
-    data class Listing<T>(
-        val pageList: LiveData<out List<T>>,
-        val networkState: LiveData<NetworkState>,
-        val refreshState: LiveData<NetworkState>,
-        val refresh: () -> Unit,
-        val retry: () -> Unit
-    )
+//    enum class Status {
+//        LOADING,
+//        SUCCESS,
+//        FAILED
+//    }
+//
+//    data class NetworkState private constructor(val status: Status, val msg: String? = null) {
+//        companion object {
+//            val LOADED = NetworkState(Status.SUCCESS)
+//            val LOADING = NetworkState(Status.LOADING)
+//            fun error(msg: String?) = NetworkState(Status.FAILED, msg)
+//        }
+//    }
+//
+//    data class Listing<T>(
+//        val pageList: LiveData<out List<T>>,
+//        val networkState: LiveData<NetworkState>,
+//        val refreshState: LiveData<NetworkState>,
+//        val refresh: () -> Unit,
+//        val retry: () -> Unit
+//    )
 
 }

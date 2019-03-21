@@ -10,6 +10,7 @@ import com.example.common.utils.LogUtils
 import com.example.main.R
 import com.example.main.databinding.ActivityMainBinding
 import com.example.main.model.entity.ArticleEntity
+import com.example.main.model.remote.NetworkState
 import com.example.main.vm.HomeViewModel
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -24,6 +25,7 @@ class MainActivity : BaseActivity(null) {
         binding.viewModel = vm
         //定义返回类型为LiveData<>，所以当Data变化时会调用Observer
         vm.getData(this, ArticleEntity::class.java)?.observe(this, Observer { list -> subscribeToModel(list)})
+        vm.getNetworkState(this)?.observe(this, Observer { stat -> subscribeToNetworkState(stat)})
         initBanner()
     }
 
@@ -35,6 +37,10 @@ class MainActivity : BaseActivity(null) {
             val article = list[0] as ArticleEntity
             LogUtils.e("tag","ArticleEntity.total_count: ${article.total_count}")
         }
+    }
+
+    private fun subscribeToNetworkState(stat: NetworkState){
+        LogUtils.e("tag","network state: ${stat}")
     }
 
 
