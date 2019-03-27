@@ -1,9 +1,16 @@
 package com.example.main.ui.activity
 
+import android.util.Log
+import android.view.LayoutInflater
+import android.view.MotionEvent
+import android.view.View
+import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.Scroller
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
+import androidx.databinding.library.baseAdapters.BR
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.DividerItemDecoration
@@ -13,11 +20,9 @@ import com.example.common.BaseActivity
 import com.example.common.utils.LogUtils
 import com.example.main.R
 import com.example.main.databinding.ActivityMainBinding
-import com.example.main.debug.MainApplication
 import com.example.main.model.entity.ArticleEntity
 import com.example.main.model.remote.NetworkState
-import com.example.main.ui.adapter.ArticleAdapter
-import com.example.main.ui.adapter.NormalDecoration
+import com.example.main.ui.adapter.BaseBindingAdapter
 import com.example.main.vm.HomeViewModel
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -62,15 +67,62 @@ class MainActivity : BaseActivity(null) {
             "http://www.pptok.com/wp-content/uploads/2012/08/xunguang-4.jpg")
         myBanner.setUrlList(urlList)
         myBanner.setViewList(viewList)
-        indicator.setViewPager(myBanner)
+//        indicator.setViewPager(myBanner)
         myBanner?.adapter?.registerDataSetObserver(indicator.dataSetObserver)
     }
 
-    private val articleAdapter = ArticleAdapter()
+    private val articleAdapter = BaseBindingAdapter<ArticleEntity.ItemsBean>(R.layout.layout_item_article, BR.articleItem)
     private fun initRecyclerView(){
+        articleAdapter.addHeadView(LayoutInflater.from(this).inflate(R.layout.layout_header,
+            findViewById<ViewGroup>(android.R.id.content), false))
+        articleAdapter.addFootView(LayoutInflater.from(this).inflate(R.layout.layout_footer,
+            findViewById<ViewGroup>(android.R.id.content), false))
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = articleAdapter
         recyclerView.addItemDecoration(DividerItemDecoration(this, LinearLayout.VERTICAL))
+        articleAdapter.onItemClick = { pos, t->
+//            Log.e("tag", "$pos, ${t.title}")
+        }
+        recyclerView.addOnScrollListener(listener)
+        var mLastY = 0f
+        val scroller = Scroller(this)
+        recyclerView.setOnTouchListener { v, event ->
+            if (isTop){
+                when(event.action){
+                    MotionEvent.ACTION_DOWN -> mLastY = event.rawY
+                    MotionEvent.ACTION_UP -> mLastY = 0f
+                    MotionEvent.ACTION_MOVE -> {
+                        val moveY = event.rawY
+                        if(moveY - mLastY > 0) {
+                            if(mLastY < 300) articleAdapter.setHeaderViewHeight(mLastY++.toInt())
+                        }else if(moveY - mLastY < 0) {
+                            if(mLastY > 0) articleAdapter.setHeaderViewHeight(mLastY--.toInt())
+                        }
+                        Log.e("tag","distanceY = $mLastY")
+                    }
+                }
+            }
+
+            false
+        }
+    }
+
+
+    private var isTop = false
+    private val listener =  object: RecyclerView.OnScrollListener(){
+        override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+            super.onScrolled(recyclerView, dx, dy)
+        }
+
+        override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+            super.onScrollStateChanged(recyclerView, newState)
+            //-1代表顶部,返回true表示没到顶,还可以滑
+            //1代表底部,返回true表示没到底部,还可以滑
+            isTop = !recyclerView.canScrollVertically(-1)
+//            val isBottom = !recyclerView.canScrollVertically(1)
+//            Log.e("tag","isTop = $isTop")
+//            Log.e("tag","isBottom = $isBottom")
+        }
     }
 
 

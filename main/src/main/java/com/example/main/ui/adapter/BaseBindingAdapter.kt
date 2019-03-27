@@ -1,0 +1,112 @@
+package com.example.main.ui.adapter
+
+import android.util.Log
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.databinding.DataBindingUtil
+import androidx.databinding.ViewDataBinding
+import androidx.recyclerview.widget.RecyclerView
+import android.icu.lang.UCharacter.GraphemeClusterBreak.T
+
+
+
+class BaseBindingAdapter<T>(private val layoutId:Int, private val BRid:Int): RecyclerView.Adapter<BaseBindingAdapter<T>.MyViewHolder>() {
+
+    private val list: MutableList<T> = mutableListOf()
+    private lateinit var binding: ViewDataBinding
+    private var headerView: View? = null
+    private var footerView: View? = null
+    private var hasHeader = false
+    private var hasFooter = false
+
+    var onItemClick: ((pos:Int, t:T) -> Unit)? = null
+
+
+    //利用返回类型添加头和尾部（下拉刷新和上拉加载）
+    override fun getItemViewType(position: Int): Int {
+        if (hasHeader){
+            if (position == 0) return ITEM_TYPE.HEADER.ordinal
+            else if (hasFooter && position == this.list.size+1) return ITEM_TYPE.FOOTER.ordinal
+        }
+        else if (hasFooter && position == this.list.size) return ITEM_TYPE.FOOTER.ordinal
+        return ITEM_TYPE.NORMAL.ordinal
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyViewHolder {
+        if (viewType == ITEM_TYPE.HEADER.ordinal){
+            return MyViewHolder(headerView!!)
+        } else if (viewType == ITEM_TYPE.FOOTER.ordinal){
+            return MyViewHolder(footerView!!)
+        }
+        val inflater = LayoutInflater.from(parent.context)
+        binding = DataBindingUtil.inflate(inflater, layoutId, parent, false) as ViewDataBinding
+        val viewHolder = binding.root
+        return MyViewHolder(viewHolder)
+    }
+
+
+    override fun getItemCount(): Int {
+        var count = list.size
+        if (hasHeader) count++
+        if (hasFooter) count++
+        return count
+    }
+
+    override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
+        if (list.size == 0) return
+        if (hasHeader && position == 0) return
+        if (hasFooter && position == itemCount-1) return
+
+//        Log.e("tag","pos:$pos")
+        var pos = position
+        if (hasHeader) pos = position - 1
+        val ret = binding.setVariable(BRid, list[pos])
+        binding.root.setOnClickListener { onItemClick?.invoke(pos, list[pos]) }
+        binding.executePendingBindings()
+    }
+
+
+    fun refresh(list: List<T>) {
+        this.list.clear()
+        this.list.addAll(list)
+        notifyDataSetChanged()
+    }
+
+    fun addHeadView(view:View){
+        headerView = view
+        hasHeader = true
+    }
+
+    fun addFootView(view:View){
+        footerView = view
+        hasFooter = true
+    }
+
+
+
+    fun setHeaderViewHeight(h:Int){
+        headerView?.layoutParams?.height = h
+//        headerView?.invalidate()
+    }
+
+
+
+
+    inner class MyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView){
+        init {
+            if (itemView == headerView){
+                headerView?.layoutParams?.height = 0
+                headerView
+            }
+        }
+    }
+
+
+    internal enum class ITEM_TYPE {
+        HEADER,
+        FOOTER,
+        NORMAL
+    }
+
+}
