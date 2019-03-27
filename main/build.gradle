@@ -72,6 +72,7 @@ dependencies {
 //    api deps.room.runtime
     kapt deps.lifecycle.compiler
     kapt deps.room.compiler
+    implementation 'androidx.recyclerview:recyclerview:1.0.0'
     // roomigrant
 //    implementation 'com.github.MatrixDev.Roomigrant:RoomigrantLib:0.1.1'
 //    kapt 'com.github.MatrixDev.Roomigrant:RoomigrantCompiler:0.1.1'

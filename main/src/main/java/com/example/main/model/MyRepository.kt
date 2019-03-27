@@ -42,7 +42,7 @@ class MyRepository{
         }
     }
 
-    fun getData(ctx :Context, tClass:Class<out Any>):LiveData<out List<Any>>?{
+    fun getEntity(ctx :Context, tClass:Class<out Any>):LiveData<out List<Any>>?{
         val localData = getLocalData(ctx, tClass)
         val data = MediatorLiveData<List<Any>>()
         data.addSource(localData) {list ->
@@ -50,11 +50,11 @@ class MyRepository{
                 data.postValue(list)  //异步通知更新
             } else {
                 LogUtils.e("tag","get remote data...")
-                getRemoteData(ctx, tClass){ t ->
-                    when(tClass.newInstance()){  //io线程
+                getRemoteData(ctx, tClass){ t ->  //io线程
+                    when(tClass.newInstance()){
                         is ArticleEntity -> MyDataBase.getInstance(ctx).articleDao().insertAll(listOf(t) as List<ArticleEntity>)
                     }
-                    update(data, ctx, tClass)
+                    updateEntity(data, ctx, tClass)
                 }
             }
         }
@@ -62,7 +62,7 @@ class MyRepository{
     }
 
     //通知数据更新
-    fun update(data:  MediatorLiveData<List<Any>>, ctx: Context, tClass:Class<out Any>){
+    fun updateEntity(data:  MediatorLiveData<List<Any>>, ctx: Context, tClass:Class<out Any>){
         val obs = Observable.create(ObservableOnSubscribe<Any> { e -> e.onNext("哈哈") })  //创建被观察者并发送一个事件
         //订阅事件
         obs.subscribeOn(Schedulers.io())
@@ -86,6 +86,22 @@ class MyRepository{
         networkState.value = NetworkState.IDEL
         return networkState
     }
+
+    fun refresh(ctx :Context, tClass:Class<out Any>, entity: MediatorLiveData<List<Any>>?){
+        getRemoteData(ctx, tClass){ t ->  //io线程
+            when(tClass.newInstance()){
+                is ArticleEntity -> MyDataBase.getInstance(ctx).articleDao().insertAll(listOf(t) as List<ArticleEntity>)
+            }
+            updateEntity(entity!!, ctx, tClass)
+        }
+    }
+
+    fun getNextPage(ctx :Context, tClass:Class<out Any>, insert:Boolean){
+        //
+    }
+
+
+
 
     //获取数据库数据
     private fun getLocalData(ctx :Context, tClass:Class<out Any>) :LiveData<out List<Any>>{

@@ -9,6 +9,7 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.main.model.local.MyDataBase.Companion.DB_VERSION
 import com.example.main.model.entity.ArticleEntity
+import com.example.main.model.local.dao.ArticleDao
 
 /**
  * 数据库创建和表(need entity, dao)
