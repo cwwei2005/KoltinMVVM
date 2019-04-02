@@ -3,18 +3,19 @@ package com.example.main.ui.activity
 import android.content.Intent
 import android.os.SystemClock
 import cn.com.eado.smartpatrol.extensions.DelegatesExt
-import com.alibaba.android.arouter.facade.annotation.Route
 import com.example.common.BaseActivity
+import com.example.common.BaseApplication
 import com.example.common.utils.LogUtils
 import com.example.main.R
-import com.example.main.debug.MainApplication
+//import com.example.main.debug.MainApplication
 //import com.github.mzule.activityrouter.annotation.Router
 //import com.github.mzule.activityrouter.router.Routers
 
-@Route(path = "/main/SplashActivity")
+//@Route(path = "/main/SplashActivity")
 class SplashActivity : BaseActivity(R.layout.activity_splash) {
 
-    private var startFirst by DelegatesExt.preference(MainApplication.mainApp, "start_first", false)
+//    private var startFirst by DelegatesExt.preference(MainApplication.mainApp, "start_first", false)
+//    private var startFirst by DelegatesExt.preference(BaseApplication.getInstance(), "start_first", false)
 
 //    override fun onCreate(savedInstanceState: Bundle?) {
 //        super.onCreate(savedInstanceState)
@@ -35,14 +36,14 @@ class SplashActivity : BaseActivity(R.layout.activity_splash) {
 //    }
 
     override fun activityInit() {
-        if (!startFirst){
-            startFirst = true
-            //init
-            SystemClock.sleep(1000)
-            LogUtils.e("tag","startFirst")
-        } else {
+//        if (!startFirst){
+//            startFirst = true
+//            //init todo
+//            SystemClock.sleep(1000)
+//            LogUtils.e("tag","startFirst")
+//        } else {
             SystemClock.sleep(300)
-        }
+//        }
         startActivity(Intent(this, MainActivity::class.java))
         finish()
     }

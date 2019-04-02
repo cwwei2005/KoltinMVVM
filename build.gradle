@@ -1,4 +1,4 @@
-ext.isAlone = true  //false：每个module作为组件，true：作为独立app
+ext.isAlone = false  //false：每个module作为组件，true：作为独立app
 
 buildscript {
     apply from: 'versions.gradle'
@@ -10,12 +10,8 @@ buildscript {
     repositories {
         google()
         mavenCentral()
-        //Bmob的maven仓库地址--必填
-//        maven { url "https://raw.github.com/bmob/bmob-android-sdk/master" }
-        maven {
-            url 'https://jitpack.io'
-            url 'https://maven.google.com'
-        }
+        maven { url 'https://jitpack.io' }
+        maven { url 'https://maven.google.com' }
     }
 }
 

@@ -7,6 +7,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.example.common.BaseApplication
 import com.example.main.model.local.MyDataBase.Companion.DB_VERSION
 import com.example.main.model.entity.ArticleEntity
 import com.example.main.model.local.dao.ArticleDao
