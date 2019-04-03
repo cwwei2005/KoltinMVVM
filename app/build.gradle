@@ -21,6 +21,9 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+    dataBinding{
+        enabled = true
+    }
 }
 
 kapt {
@@ -33,6 +36,7 @@ dependencies {
     } else{
         implementation project(':main')
         implementation project(':news')
+        implementation project(':selectcar')
     }
 
     kapt deps.arouter.compiler

@@ -74,9 +74,9 @@ dependencies {
     api deps.lifecycle.runtime
     api deps.lifecycle.extensions
     api deps.room.runtime
-    //非公共部分依赖需在每个组件添加
-//    kapt deps.lifecycle.compiler
-//    kapt deps.room.compiler
+    //非公共部分依赖需在每个组件添加, 由于组件化将model部分放在了该组件，所以也需要以下依赖
+    kapt deps.lifecycle.compiler
+    kapt deps.room.compiler
     //facebook出品，可在Chrome中查看数据库
     api 'com.facebook.stetho:stetho:1.5.0'
 

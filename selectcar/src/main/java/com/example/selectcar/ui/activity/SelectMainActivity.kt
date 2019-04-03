@@ -1,4 +1,4 @@
-package com.example.main.ui.activity
+package com.example.selectcar.ui.activity
 
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
@@ -7,32 +7,32 @@ import androidx.lifecycle.ViewModelProviders
 import com.alibaba.android.arouter.facade.annotation.Route
 import com.alibaba.android.arouter.launcher.ARouter
 import com.example.common.BaseActivity
-import com.example.common.utils.LogUtils
-import com.example.main.R
-import com.example.main.databinding.ActivityMainBinding
-import com.example.common.model.entity.ArticleEntity
+import com.example.common.model.entity.SelectEntity
 import com.example.common.model.remote.NetworkState
-import com.example.main.vm.HomeViewModel
+import com.example.common.utils.LogUtils
+import com.example.selectcar.vm.SelectHomeViewModel
+import com.example.selectcar.R
+import com.example.selectcar.databinding.SelectActivityMainBinding
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.select_activity_main.*
 
-@Route(path = "/main/mainActivity")
-class MainActivity : BaseActivity(null) {
+@Route(path = "/select/mainActivity")
+class SelectMainActivity : BaseActivity(null) {
 
-    private lateinit var vm:HomeViewModel
+    private lateinit var vm: SelectHomeViewModel
 
     override fun activityInit() {
         //需要在(xml)布局文件定义HomeViewModel
-        vm = ViewModelProviders.of(this).get(HomeViewModel::class.java)
-        val binding = DataBindingUtil.setContentView<ViewDataBinding>(this, R.layout.activity_main) as ActivityMainBinding
+        vm = ViewModelProviders.of(this).get(SelectHomeViewModel::class.java)
+        val binding = DataBindingUtil.setContentView<ViewDataBinding>(this, R.layout.select_activity_main) as SelectActivityMainBinding
         binding.viewModel = vm
-        binding.navigation.selectedItemId = navigation.menu.getItem(0).itemId
+        binding.navigation.selectedItemId = navigation.menu.getItem(1).itemId
         //定义返回类型为LiveData<>，所以当Data变化时会调用Observer
         vm.getEntity()?.observe(this, Observer { list -> subscribeToModel(list)})
         vm.getNetworkState()?.observe(this, Observer { stat -> subscribeToNetworkState(stat)})
 //        initBanner()
 //        initRecyclerView()
-//        bt.setOnClickListener { vm.refresh(ArticleEntity::class.java) }  //for test
+//        bt.setOnClickListener { vm.refresh(SelectEntity::class.java) }  //for test
 
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener)
     }
@@ -40,28 +40,26 @@ class MainActivity : BaseActivity(null) {
     //更新UI，或者简单的可以直接在布局定义
     private fun subscribeToModel(list: List<Any>?) {
         if (list == null || list.isEmpty()){
-            LogUtils.e("tag","ArticleEntity: ${list?.size}")
+            LogUtils.e("tag","SelectEntity: ${list?.size}")
         } else {
-            val article = list[0] as ArticleEntity
-            LogUtils.e("tag","ArticleEntity.total_count: ${article.total_count}")
+            val article = list[0] as SelectEntity
+            LogUtils.e("tag","SelectEntity.total_count: ${article.total_count}")
 //            articleAdapter.refresh(article.items!!)
         }
     }
 
     private fun subscribeToNetworkState(stat: NetworkState){
-        LogUtils.e("tag","network state: $stat")
+        LogUtils.e("tag","network state: ${stat}")
     }
-
 
     private val mOnNavigationItemSelectedListener = BottomNavigationView.OnNavigationItemSelectedListener { item ->
         when (item.itemId) {
             R.id.navigation_home -> {
-//                message.setText(R.string.title_home)
+                ARouter.getInstance().build("/main/mainActivity").navigation()
                 return@OnNavigationItemSelectedListener true
             }
             R.id.navigation_dashboard -> {
 //                message.setText(R.string.title_dashboard)
-                ARouter.getInstance().build("/select/mainActivity").navigation()
                 return@OnNavigationItemSelectedListener true
             }
             R.id.navigation_notifications -> {
@@ -71,6 +69,7 @@ class MainActivity : BaseActivity(null) {
         }
         false
     }
+
 
 //    private fun initBanner() {
 //        val viewList:List<ImageView> = listOf(ImageView(this), ImageView(this), ImageView(this))
@@ -83,7 +82,7 @@ class MainActivity : BaseActivity(null) {
 //        myBanner?.adapter?.registerDataSetObserver(indicator.dataSetObserver)
 //    }
 
-//    private val articleAdapter = BaseRVAdapter<ArticleEntity.ItemsBean>(R.layout.layout_item_select, BR.articleItem)
+//    private val articleAdapter = BaseRVAdapter<SelectEntity.ItemsBean>(R.layout.layout_item_select, BR.articleItem)
 //    private fun initRecyclerView(){
 //        articleAdapter.addHeadView(LayoutInflater.from(this).inflate(R.layout.recyclerview_header,
 //            findViewById<ViewGroup>(android.R.id.content), false))
@@ -145,8 +144,9 @@ class MainActivity : BaseActivity(null) {
 //        }
 //    }
 
-    override fun onDestroy() {
-        super.onDestroy()
-//        overridePendingTransition(0, 0)
-    }
+//    override fun onDestroy() {
+//        super.onDestroy()
+//        myBanner?.adapter?.unregisterDataSetObserver(indicator.dataSetObserver)
+//        myBanner.stop()
+//    }
 }

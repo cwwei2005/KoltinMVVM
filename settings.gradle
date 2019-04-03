@@ -1,1 +1,1 @@
-include ':app', ':news', ':common', ':main'
+include ':app', ':news', ':common', ':main', ':selectcar'

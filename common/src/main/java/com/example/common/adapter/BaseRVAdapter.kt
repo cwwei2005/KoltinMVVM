@@ -1,4 +1,4 @@
-package com.example.main.ui.adapter
+package com.example.common.adapter
 
 import android.view.LayoutInflater
 import android.view.View
@@ -8,7 +8,7 @@ import androidx.databinding.ViewDataBinding
 import androidx.recyclerview.widget.RecyclerView
 
 
-class BaseBindingAdapter<T>(private val layoutId:Int, private val BRid:Int): RecyclerView.Adapter<BaseBindingAdapter<T>.MyViewHolder>() {
+class BaseRVAdapter<T>(private val layoutId:Int, private val BRid:Int): RecyclerView.Adapter<BaseRVAdapter<T>.MyViewHolder>() {
 
     private val list: MutableList<T> = mutableListOf()
     private lateinit var binding: ViewDataBinding
