@@ -36,10 +36,10 @@ class BaseBindingAdapter<T>(private val layoutId:Int, private val BRid:Int): Rec
         } else if (viewType == ITEM_TYPE.FOOTER.ordinal){
             return MyViewHolder(footerView!!)
         }
-        val inflater = LayoutInflater.from(parent.context)
-        binding = DataBindingUtil.inflate(inflater, layoutId, parent, false) as ViewDataBinding
-        val viewHolder = binding.root
-        return MyViewHolder(viewHolder)
+        val binding: ViewDataBinding = DataBindingUtil.inflate(LayoutInflater.from(parent.context), layoutId, parent, false)
+        val viewHolder = MyViewHolder(binding.root)
+        viewHolder.setBinding(binding)
+        return viewHolder
     }
 
 
@@ -96,6 +96,13 @@ class BaseBindingAdapter<T>(private val layoutId:Int, private val BRid:Int): Rec
                 headerView?.layoutParams?.height = 0
                 headerView
             }
+        }
+        private lateinit var binding:ViewDataBinding
+        fun setBinding(binding:ViewDataBinding){
+            this.binding = binding
+        }
+        fun getBinding(): ViewDataBinding{
+            return this.binding
         }
     }
 
